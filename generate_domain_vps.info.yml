@@ -1,0 +1,6 @@
+name: generate domain vps
+type: module
+description: permet de generer un domaine, pour un vps
+package: Custom
+core: 8.x
+core_version_requirement: ^8 || ^9

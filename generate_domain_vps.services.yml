@@ -1,0 +1,4 @@
+services:
+  generate_domain_vps.vhosts:
+    class: Drupal\generate_domain_vps\Services\GenerateDomainVhost
+    arguments: []

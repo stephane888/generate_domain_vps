@@ -1,0 +1,6 @@
+generate_domain_vps.settings_form:
+  title: generate domain vps
+  description: Configure generate domain vps.
+  parent: system.admin_config_system
+  route_name: generate_domain_vps.settings_form
+  weight: 10
