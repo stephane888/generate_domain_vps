@@ -42,11 +42,18 @@ class GenerateDomainVhost extends ControllerBase {
       $domain = $subDomain . '.' . $domain;
     }
     self::$currentDomain = $domain;
-    $string = '<VirtualHost *:80>
-      	ServerAdmin kksasteph888@gmail.com
-      	ServerName ' . $domain . '
-      	DocumentRoot /var/www/wb_horison_com/public/web
-      	<Directory /var/www/wb_horison_com/public/web>
+    $config = \Drupal::config('generate_domain_vps.settings');
+    $conf = $config->getRawData();
+    if (!empty($conf['document_root'])) {
+      $documentRoot = $conf['document_root'];
+      $serverAdmin = $conf['server_admin'];
+      $logs = $conf['logs'];
+      
+      $string = '<VirtualHost *:80>
+      	ServerAdmin ' . $serverAdmin . '
+      	ServerName ' . self::$currentDomain . '
+      	DocumentRoot ' . $documentRoot . '
+      	<Directory ' . $documentRoot . '>
       		Options Indexes FollowSymLinks
       		AllowOverride All
       		Order Deny,Allow
@@ -58,9 +65,11 @@ class GenerateDomainVhost extends ControllerBase {
       		# SetHandler "proxy:unix:/run/php/php7.4-fpm.sock|fcgi://php74.localhost"
       		SetHandler "proxy:unix:/run/php/php7.4-fpm.sock|fcgi://php74.localhost"
       	</FilesMatch>
-      	ErrorLog /var/www/wb_horison_com/logs/error.log
-      	CustomLog /var/www/wb_horison_com/logs/access.log combined
+      	ErrorLog ' . $logs . '/error.log
+      	CustomLog ' . $logs . '/access.log combined
 </VirtualHost>';
+    }
+    
     //
     $cmd = "echo '$string' > " . self::$homeVps . "/vhosts/" . self::$currentDomain . '.conf';
     $exc = $this->excuteCmd($cmd);
