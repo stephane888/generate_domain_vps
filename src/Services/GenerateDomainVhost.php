@@ -11,6 +11,8 @@ class GenerateDomainVhost extends ControllerBase {
    * @var string
    */
   protected static $homeVps = '/home/wb-horizon';
+  /**
+   */
   protected static $currentDomain = null;
   
   /**
