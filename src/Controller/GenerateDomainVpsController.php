@@ -37,7 +37,7 @@ class GenerateDomainVpsController extends ControllerBase {
    * Builds the response.
    */
   public function build() {
-    $domain = ' Generate--' . time() . '.kksa';
+    $domain = 'generate--' . time() . '.kksa';
     $subDomain = '';
     $this->GenerateDomainVhost->createDomainOnVPS($domain, $subDomain);
     $build['content'] = [

@@ -70,14 +70,17 @@ class GenerateDomainVhost extends ControllerBase {
       	ErrorLog ' . $logs . '/error.log
       	CustomLog ' . $logs . '/access.log combined
 </VirtualHost>';
+      //
+      $cmd = "echo '$string' > " . self::$homeVps . "/vhosts/" . self::$currentDomain . '.conf';
+      $exc = $this->excuteCmd($cmd);
+      // dump($exc);
+      if ($exc['return_var']) {
+        \Drupal::messenger()->addError(" Impossible de generer le fichier vhost ");
+        $this->logger->warning(' Error to generate vhost <br> ' . implode("<br>", $exc['output']));
+        $this->hasError = true;
+      }
     }
-    
-    //
-    $cmd = "echo '$string' > " . self::$homeVps . "/vhosts/" . self::$currentDomain . '.conf';
-    $exc = $this->excuteCmd($cmd);
-    if ($exc['return_var']) {
-      \Drupal::messenger()->addError(" Impossible de generer le fichier vhost ");
-      $this->logger->warning(' Error to generate vhost <br> ' . implode("<br>", $exc['output']));
+    else {
       $this->hasError = true;
     }
   }
@@ -137,7 +140,10 @@ class GenerateDomainVhost extends ControllerBase {
   
   protected function addDomainToHosts() {
     if (self::$currentDomain && !$this->hasError) {
-      $cmd = " sudo echo '152.228.134.19  " . self::$currentDomain . "' | sudo tee -a /etc/hosts ";
+      $configs = \Drupal::config('ovh_api_rest.settings');
+      $conf = $configs->getRawData();
+      $ip = $conf['target'];
+      $cmd = " sudo echo '" . $ip . "  " . self::$currentDomain . "' | sudo tee -a /etc/hosts ";
       $exc = $this->excuteCmd($cmd);
       if ($exc['return_var']) {
         $this->logger->critical(' Error to reload apache2 <br> ' . implode("<br>", $exc['output']));
