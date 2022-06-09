@@ -10,5 +10,7 @@
         }
     ],
     "minimum-stability": "dev",
-    "require": {}
+    "require": {
+        "stephane888/ovh_api_rest": "dev-1x|^1.0"
+    }
 }
