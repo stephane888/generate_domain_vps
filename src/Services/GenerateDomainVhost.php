@@ -3,6 +3,7 @@
 namespace Drupal\generate_domain_vps\Services;
 
 use Drupal\Core\Controller\ControllerBase;
+use Stephane888\Debug\Repositories\ConfigDrupal;
 
 class GenerateDomainVhost extends ControllerBase {
   
@@ -44,8 +45,7 @@ class GenerateDomainVhost extends ControllerBase {
       $domain = $subDomain . '.' . $domain;
     }
     self::$currentDomain = $domain;
-    $config = \Drupal::config('generate_domain_vps.settings');
-    $conf = $config->getRawData();
+    $conf = ConfigDrupal::config('generate_domain_vps.settings');
     if (!empty($conf['document_root'])) {
       $documentRoot = $conf['document_root'];
       $serverAdmin = $conf['server_admin'];
@@ -140,8 +140,7 @@ class GenerateDomainVhost extends ControllerBase {
   
   protected function addDomainToHosts() {
     if (self::$currentDomain && !$this->hasError) {
-      $configs = \Drupal::config('ovh_api_rest.settings');
-      $conf = $configs->getRawData();
+      $conf = ConfigDrupal::config('ovh_api_rest.settings');
       $ip = $conf['target'];
       $cmd = " sudo echo '" . $ip . "  " . self::$currentDomain . "' | sudo tee -a /etc/hosts ";
       $exc = $this->excuteCmd($cmd);
