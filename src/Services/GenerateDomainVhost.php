@@ -28,11 +28,19 @@ class GenerateDomainVhost extends ControllerBase {
   }
   
   function createDomainOnVPS(string $domain, string $subDomain) {
-    $this->init();
-    $this->createVHost($domain, $subDomain);
+    $this->init($domain, $subDomain);
+    $this->createVHost();
     $this->linkToVhostApache2();
     $this->activeNewHost();
     $this->addDomainToHosts();
+  }
+  
+  function removeDomainOnVps($domain, $subDomain) {
+    $this->init($domain, $subDomain);
+    if ($this->disabledVHost()) {
+      $this->removeDomainToHosts();
+      $this->deleteFileVhost();
+    }
   }
   
   /**
@@ -40,11 +48,7 @@ class GenerateDomainVhost extends ControllerBase {
    * @param string $domain
    * @param string $subDomain
    */
-  protected function createVHost($domain, $subDomain = null) {
-    if (!empty($subDomain)) {
-      $domain = $subDomain . '.' . $domain;
-    }
-    self::$currentDomain = $domain;
+  protected function createVHost() {
     $conf = ConfigDrupal::config('generate_domain_vps.settings');
     if (!empty($conf['document_root'])) {
       $documentRoot = $conf['document_root'];
@@ -85,6 +89,17 @@ class GenerateDomainVhost extends ControllerBase {
     }
   }
   
+  protected function deleteFileVhost() {
+    if (self::$currentDomain && !$this->hasError) {
+      $cmd = " rm  " . self::$homeVps . "/vhosts/" . self::$currentDomain . ".conf";
+      $exc = $this->excuteCmd($cmd);
+      if ($exc['return_var']) {
+        \Drupal::messenger()->addError(" Error to remove file Vhost ");
+        $this->logger->warning(' Error to remove file Vhost <br> ' . implode("<br>", $exc['output']));
+      }
+    }
+  }
+  
   /**
    * --
    */
@@ -96,6 +111,27 @@ class GenerateDomainVhost extends ControllerBase {
         \Drupal::messenger()->addError(" Can't link vhost in apache2 ");
         $this->logger->warning(' Cant link vhost in apache2 <br> ' . implode("<br>", $exc['output']));
         $this->hasError = true;
+      }
+    }
+  }
+  
+  protected function disabledVHost() {
+    if (self::$currentDomain && !$this->hasError) {
+      $cmd = " sudo a2dissite " . self::$currentDomain . '.conf';
+      $exc = $this->excuteCmd($cmd);
+      if ($exc['return_var']) {
+        $this->logger->critical(' Error to disable vhost ' . self::$currentDomain . '.conf <br> ' . implode("<br>", $exc['output']));
+        return false;
+      }
+      else {
+        $cmd = " sudo systemctl reload apache2 ";
+        $exc = $this->excuteCmd($cmd);
+        if ($exc['return_var']) {
+          $this->logger->critical(' Error Apache not reload after disable : ' . self::$currentDomain . '.conf <br> ' . implode("<br>", $exc['output']));
+          return false;
+        }
+        else
+          return true;
       }
     }
   }
@@ -151,11 +187,22 @@ class GenerateDomainVhost extends ControllerBase {
     }
   }
   
+  protected function removeDomainToHosts() {
+    if (self::$currentDomain && !$this->hasError) {
+      $conf = ConfigDrupal::config('ovh_api_rest.settings');
+      // $ip = $conf['target'];
+    }
+  }
+  
   /**
    *
    * @throws \LogicException
    */
-  private function init() {
+  private function init($domain, $subDomain = null) {
+    if (!empty($subDomain)) {
+      $domain = $subDomain . '.' . $domain;
+    }
+    self::$currentDomain = $domain;
     // Get current pwd.
     $cmd = 'pwd';
     $exc = $this->excuteCmd($cmd);
