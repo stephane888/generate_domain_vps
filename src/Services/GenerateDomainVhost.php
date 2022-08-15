@@ -5,6 +5,12 @@ namespace Drupal\generate_domain_vps\Services;
 use Drupal\Core\Controller\ControllerBase;
 use Stephane888\Debug\Repositories\ConfigDrupal;
 
+/**
+ * Gere la creation et la suppresion d'un vhost.
+ *
+ * @author stephane
+ *        
+ */
 class GenerateDomainVhost extends ControllerBase {
   
   /**
@@ -115,6 +121,10 @@ class GenerateDomainVhost extends ControllerBase {
     }
   }
   
+  /**
+   *
+   * @return boolean
+   */
   protected function disabledVHost() {
     if (self::$currentDomain && !$this->hasError) {
       $cmd = " sudo a2dissite " . self::$currentDomain . '.conf';
@@ -136,6 +146,8 @@ class GenerateDomainVhost extends ControllerBase {
     }
   }
   
+  /**
+   */
   protected function activeNewHost() {
     if (self::$currentDomain && !$this->hasError) {
       $cmd = "sudo a2ensite " . self::$currentDomain . '.conf';
@@ -187,10 +199,29 @@ class GenerateDomainVhost extends ControllerBase {
     }
   }
   
+  /**
+   * --
+   */
   protected function removeDomainToHosts() {
     if (self::$currentDomain && !$this->hasError) {
-      $conf = ConfigDrupal::config('ovh_api_rest.settings');
-      // $ip = $conf['target'];
+      // $conf = ConfigDrupal::config('ovh_api_rest.settings');
+      $file = '/etc/hosts';
+      if (!file_exists($file)) {
+        $out = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($out as $k => $value) {
+          if (str_contains($value, self::$currentDomain)) {
+            unset($out[$k]);
+          }
+        }
+        //
+        $str = implode("\n", $out);
+        $cmd = " echo '" . $str . "' | sudo tee /etc/hosts ";
+        $exc = $this->excuteCmd($cmd);
+        if ($exc['return_var']) {
+          $this->logger->critical(' Error to update /etc/hosts <br> ' . implode("<br>", $exc['output']));
+          $this->hasError = true;
+        }
+      }
     }
   }
   
