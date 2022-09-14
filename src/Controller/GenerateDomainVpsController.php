@@ -3,8 +3,8 @@
 namespace Drupal\generate_domain_vps\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\generate_domain_vps\Services\GenerateDomainVhost;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Returns responses for generate domain vps routes.
@@ -34,7 +34,7 @@ class GenerateDomainVpsController extends ControllerBase {
   }
   
   /**
-   * Builds the response.
+   * Pour les tests ou à titre d'example.
    */
   public function build() {
     $domain = 'generate--' . time() . '.kksa';
