@@ -57,6 +57,14 @@ class GenerateDomainVhost extends ControllerBase {
       $documentRoot = $conf['document_root'];
       $serverAdmin = $conf['server_admin'];
       $logs = $conf['logs'];
+      $ssl_redirection = '';
+      if (!empty($conf['active_ssl_redirection'])) {
+        $ssl_redirection = '
+  #redirect to https
+  RewriteEngine On
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
+';
+      }
 
       $string = '<VirtualHost *:80>
       	ServerAdmin ' . $serverAdmin . '
@@ -76,6 +84,7 @@ class GenerateDomainVhost extends ControllerBase {
       	</FilesMatch>
       	ErrorLog ' . $logs . '/error.log
       	CustomLog ' . $logs . '/access.log combined
+' . $ssl_redirection . '
 </VirtualHost>';
       //
       $f_vhost = self::$homeVps . "/vhosts/" . self::$currentDomain . '.conf';

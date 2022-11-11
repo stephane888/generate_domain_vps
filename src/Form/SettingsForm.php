@@ -9,7 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
  * Configure generate domain vps settings for this site.
  */
 class SettingsForm extends ConfigFormBase {
-  
+
   /**
    *
    * {@inheritdoc}
@@ -17,7 +17,7 @@ class SettingsForm extends ConfigFormBase {
   public function getFormId() {
     return 'generate_domain_vps_settings';
   }
-  
+
   /**
    *
    * {@inheritdoc}
@@ -27,7 +27,7 @@ class SettingsForm extends ConfigFormBase {
       'generate_domain_vps.settings'
     ];
   }
-  
+
   /**
    *
    * {@inheritdoc}
@@ -41,23 +41,31 @@ class SettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('server_admin'),
       '#description' => 'Example: '
     ];
-    
+
     $form['document_root'] = [
       '#type' => 'textfield',
       '#title' => $this->t('document_root'),
       '#default_value' => $config->get('document_root'),
       '#description' => 'Example: /var/www/wb_horison_com/public/web'
     ];
-    
+
     $form['logs'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Logs'),
       '#default_value' => $config->get('logs'),
       '#description' => 'Example: /var/www/wb_horison_com/logs'
     ];
+
+    $form['active_ssl_redirection'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('active_ssl_redirection'),
+      '#default_value' => $config->get('active_ssl_redirection'),
+      '#description' => 'Active la redirection https'
+    ];
+
     return parent::buildForm($form, $form_state);
   }
-  
+
   /**
    *
    * {@inheritdoc}
@@ -69,7 +77,7 @@ class SettingsForm extends ConfigFormBase {
     // }
     // parent::validateForm($form, $form_state);
   }
-  
+
   /**
    *
    * {@inheritdoc}
@@ -79,8 +87,9 @@ class SettingsForm extends ConfigFormBase {
     $config->set('server_admin', $form_state->getValue('server_admin'));
     $config->set('document_root', $form_state->getValue('document_root'));
     $config->set('logs', $form_state->getValue('logs'));
+    $config->set('active_ssl_redirection', $form_state->getValue('active_ssl_redirection'));
     $config->save();
     parent::submitForm($form, $form_state);
   }
-  
+
 }
