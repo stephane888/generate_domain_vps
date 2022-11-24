@@ -1,5 +1,5 @@
 generate_domain_vps.example:
-  path: '/generate-domain-vps/example'
+  path: '/generate-domain-vps/generate'
   defaults:
     _title: 'Example'
     _controller: '\Drupal\generate_domain_vps\Controller\GenerateDomainVpsController::build'

@@ -60,12 +60,11 @@ class GenerateDomainVhost extends ControllerBase {
       $ssl_redirection = '';
       if (!empty($conf['active_ssl_redirection'])) {
         $ssl_redirection = '
-  #redirect to https
-  RewriteEngine On
-  RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
-';
+      #redirect to https
+      RewriteEngine On
+      RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
+    ';
       }
-
       $string = '<VirtualHost *:80>
       	ServerAdmin ' . $serverAdmin . '
       	ServerName ' . self::$currentDomain . '
