@@ -9,10 +9,10 @@ use Stephane888\Debug\Repositories\ConfigDrupal;
  * Gere la creation et la suppresion d'un vhost.
  *
  * @author stephane
- *
+ *        
  */
 class GenerateDomainVhost extends ControllerBase {
-
+  
   /**
    *
    * @var string
@@ -21,18 +21,18 @@ class GenerateDomainVhost extends ControllerBase {
   /**
    */
   protected static $currentDomain = null;
-
+  
   /**
    *
    * @var \Psr\Log\LoggerInterface
    */
   protected $logger;
   protected $hasError = false;
-
+  
   function __construct() {
-    $this->logger = \Drupal::logger('generate_style_theme');
+    $this->logger = \Drupal::logger('generate_domain_vps');
   }
-
+  
   function createDomainOnVPS(string $domain, string $subDomain) {
     $this->init($domain, $subDomain);
     $this->createVHost();
@@ -40,12 +40,12 @@ class GenerateDomainVhost extends ControllerBase {
     $this->activeNewHost();
     $this->addDomainToHosts();
   }
-
+  
   function removeDomainOnVps($domain, $subDomain) {
     $this->init($domain, $subDomain);
     $this->deleteFileVhost();
   }
-
+  
   /**
    *
    * @param string $domain
@@ -103,7 +103,7 @@ class GenerateDomainVhost extends ControllerBase {
       $this->hasError = true;
     }
   }
-
+  
   /**
    * Permet de supprimer un domaine.
    * 1 - on desactive le domaine
@@ -128,7 +128,7 @@ class GenerateDomainVhost extends ControllerBase {
       $this->removeDomainToHosts();
     }
   }
-
+  
   /**
    * --
    */
@@ -147,7 +147,7 @@ class GenerateDomainVhost extends ControllerBase {
       }
     }
   }
-
+  
   /**
    *
    * @return boolean
@@ -179,7 +179,7 @@ class GenerateDomainVhost extends ControllerBase {
       }
     }
   }
-
+  
   /**
    */
   protected function activeNewHost() {
@@ -219,7 +219,7 @@ class GenerateDomainVhost extends ControllerBase {
       }
     }
   }
-
+  
   protected function addDomainToHosts() {
     if (self::$currentDomain && !$this->hasError) {
       $conf = ConfigDrupal::config('ovh_api_rest.settings');
@@ -232,7 +232,7 @@ class GenerateDomainVhost extends ControllerBase {
       }
     }
   }
-
+  
   /**
    * --
    */
@@ -258,7 +258,7 @@ class GenerateDomainVhost extends ControllerBase {
       }
     }
   }
-
+  
   /**
    *
    * @throws \LogicException
@@ -283,7 +283,7 @@ class GenerateDomainVhost extends ControllerBase {
       array_pop($dir);
       self::$homeVps = implode("/", $dir);
     }
-
+    
     // Create dir 'vhosts' if not exit:
     $cmd = 'mkdir -p ' . self::$homeVps . '/vhosts';
     $exc = $this->excuteCmd($cmd);
@@ -292,7 +292,7 @@ class GenerateDomainVhost extends ControllerBase {
       throw new \LogicException(' Impossible de creer le dossier vhosts <br>');
     }
   }
-
+  
   private function excuteCmd($cmd) {
     ob_start();
     $return_var = '';
@@ -308,5 +308,5 @@ class GenerateDomainVhost extends ControllerBase {
     ];
     return $debug;
   }
-
+  
 }

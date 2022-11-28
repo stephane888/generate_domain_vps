@@ -1,8 +1,16 @@
 generate_domain_vps.example:
-  path: '/generate-domain-vps/generate'
+  path: '/generate-domain-vps/example'
   defaults:
     _title: 'Example'
     _controller: '\Drupal\generate_domain_vps\Controller\GenerateDomainVpsController::build'
+  requirements:
+    _permission: 'access content'
+    
+generate_domain_vps.generate:
+  path: '/generate-domain-vps/generate/{name}'
+  defaults:
+    _title: 'Example'
+    _controller: '\Drupal\generate_domain_vps\Controller\GenerateDomainVpsController::generateDomainVps'
   requirements:
     _permission: 'access content'
 
