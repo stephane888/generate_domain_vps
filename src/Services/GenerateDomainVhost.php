@@ -65,6 +65,11 @@ class GenerateDomainVhost extends ControllerBase {
       RewriteRule ^(.*)$ https://%{HTTP_HOST}$1 [R=301,L]
     ';
       }
+      // define php_version
+      $php_version = '';
+      if (!empty($conf['php_version'])) {
+        $php_version = '<FilesMatch ".+\.ph(ar|p|tml)$"> ' . $conf['php_version'] . ' </FilesMatch>';
+      }
       $string = '<VirtualHost *:80>
       	ServerAdmin ' . $serverAdmin . '
       	ServerName ' . self::$currentDomain . '
@@ -75,12 +80,7 @@ class GenerateDomainVhost extends ControllerBase {
       		Order Deny,Allow
       		Allow from all
       	</Directory>
-          # decommenter si vous disposez de plusieurs version de PHP
-      	<FilesMatch ".+\.ph(ar|p|tml)$">
-      		# SetHandler "proxy:unix:/run/php/php7.0-fpm.sock|fcgi://php70.localhost"
-      		# SetHandler "proxy:unix:/run/php/php7.4-fpm.sock|fcgi://php74.localhost"
-      		SetHandler "proxy:unix:/run/php/php7.4-fpm.sock|fcgi://php74.localhost"
-      	</FilesMatch>
+         ' . $php_version . '
       	ErrorLog ' . $logs . '/error.log
       	CustomLog ' . $logs . '/access.log combined
 ' . $ssl_redirection . '
