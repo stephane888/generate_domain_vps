@@ -53,7 +53,10 @@ class SettingsForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => 'Version de PHP',
       '#default_value' => $config->get('php_version'),
-      '#description' => 'Example: SetHandler "proxy:unix:/run/php/php7.4-fpm.sock|fcgi://php74.localhost <br> laisser vide pour utiliser la version par defaut.'
+      '#description' => 'Example 1 php7.4 :<br> SetHandler "proxy:unix:/run/php/php7.4-fpm.sock|fcgi://localhost <br>
+Example 2 php8.1 :<br> SetHandler "proxy:unix:/run/php/php8.1-fpm.sock|fcgi://localhost <br>
+Example 3 php8.2 :<br> SetHandler "proxy:unix:/run/php/php8.2-fpm.sock|fcgi://localhost <br>
+laisser vide pour utiliser la version par defaut.'
     ];
     
     $form['logs'] = [

@@ -68,7 +68,9 @@ class GenerateDomainVhost extends ControllerBase {
       // define php_version
       $php_version = '';
       if (!empty($conf['php_version'])) {
-        $php_version = '<FilesMatch ".+\.ph(ar|p|tml)$"> ' . $conf['php_version'] . ' </FilesMatch>';
+        $php_version = '<FilesMatch ".+\.php$"> 
+        ' . $conf['php_version'] . '
+        </FilesMatch>';
       }
       $string = '<VirtualHost *:80>
       	ServerAdmin ' . $serverAdmin . '
@@ -80,7 +82,7 @@ class GenerateDomainVhost extends ControllerBase {
       		Order Deny,Allow
       		Allow from all
       	</Directory>
-         ' . $php_version . '
+        ' . $php_version . '
       	ErrorLog ' . $logs . '/error.log
       	CustomLog ' . $logs . '/access.log combined
 ' . $ssl_redirection . '
@@ -201,7 +203,7 @@ class GenerateDomainVhost extends ControllerBase {
         $cmd = "sudo systemctl reload apache2";
         $exc = $this->excuteCmd($cmd);
         if ($exc['return_var']) {
-          $this->logger->warning(' Error to reload apache2 (1/2) <br> ' . implode("<br>", $exc['output']));
+          $this->logger->warning(' Error to reload apache2 (1/2) => ' . self::$currentDomain . ' <br> ' . implode("<br>", $exc['output']));
           $this->hasError = true;
           // try to disable.
           $cmd = "sudo a2dissite " . self::$currentDomain . '.conf';
