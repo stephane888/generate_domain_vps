@@ -73,6 +73,17 @@ laisser vide pour utiliser la version par defaut.'
       '#description' => 'Active la redirection https'
     ];
     
+    $form['ssl_certificate_file'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('ssl_certificate_file'),
+      '#default_value' => $config->get('ssl_certificate_file'),
+      '#description' => 'Les uri des fichiers SSL. <br> Example : <br>
+SSLCertificateFile /etc/letsencrypt/live/xxxx.com/fullchain.pem<br>
+SSLCertificateKeyFile /etc/letsencrypt/live/xxxx.com/privkey.pem<br>
+Include /etc/letsencrypt/options-ssl-apache.conf
+'
+    ];
+    
     return parent::buildForm($form, $form_state);
   }
   
@@ -99,6 +110,7 @@ laisser vide pour utiliser la version par defaut.'
     $config->set('logs', $form_state->getValue('logs'));
     $config->set('active_ssl_redirection', $form_state->getValue('active_ssl_redirection'));
     $config->set('php_version', $form_state->getValue('php_version'));
+    $config->set('ssl_certificate_file', $form_state->getValue('ssl_certificate_file'));
     $config->save();
     parent::submitForm($form, $form_state);
   }

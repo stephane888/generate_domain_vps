@@ -1,5 +1,5 @@
 generate_domain_vps.settings_form:
-  title: generate domain vps
+  title: generate vhost on vps
   description: Configure generate domain vps.
   parent: system.admin_config_ui
   route_name: generate_domain_vps.settings_form

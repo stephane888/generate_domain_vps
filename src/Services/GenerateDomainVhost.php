@@ -87,6 +87,25 @@ class GenerateDomainVhost extends ControllerBase {
       	CustomLog ' . $logs . '/access.log combined
 ' . $ssl_redirection . '
 </VirtualHost>';
+      if (!empty($conf['active_ssl_redirection'])) {
+        $ssl_certificate_file = $conf['ssl_certificate_file'];
+        $string .= '<VirtualHost *:443>
+        ServerAdmin ' . $serverAdmin . '
+        ServerName ' . self::$currentDomain . '
+        DocumentRoot ' . $documentRoot . '
+        <Directory ' . $documentRoot . '>
+                Options Indexes FollowSymLinks
+                AllowOverride All
+                Order Deny,Allow
+                Allow from all
+        </Directory>
+        ' . $php_version . '
+        ErrorLog ' . $logs . '/error.log
+        CustomLog ' . $logs . '/access.log combined
+#SSL conf.
+' . $ssl_certificate_file . '
+</VirtualHost>';
+      }
       //
       $f_vhost = self::$homeVps . "/vhosts/" . self::$currentDomain . '.conf';
       if (file_exists($f_vhost)) {
