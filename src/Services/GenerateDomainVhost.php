@@ -86,10 +86,14 @@ class GenerateDomainVhost extends ControllerBase {
       	ErrorLog ' . $logs . '/error.log
       	CustomLog ' . $logs . '/access.log combined
 ' . $ssl_redirection . '
-</VirtualHost>';
+</VirtualHost>
+'; // cette ligne est necessaire car cela peut causser une erreur
+      // d'eexecution au niveau de apache.( si </VirtualHost> et <VirtualHost
+      // *:443> sont sur la meme ligne erreur d'execution ).
       if (!empty($conf['active_ssl_redirection'])) {
         $ssl_certificate_file = $conf['ssl_certificate_file'];
-        $string .= '<VirtualHost *:443>
+        $string .= '
+<VirtualHost *:443>
         ServerAdmin ' . $serverAdmin . '
         ServerName ' . self::$currentDomain . '
         DocumentRoot ' . $documentRoot . '
@@ -202,6 +206,7 @@ class GenerateDomainVhost extends ControllerBase {
   }
   
   /**
+   * --
    */
   protected function activeNewHost() {
     if (self::$currentDomain && !$this->hasError) {
