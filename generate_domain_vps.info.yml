@@ -1,8 +1,7 @@
 name: generate domain vps
 type: module
-description: permet de generer un domaine, pour un vps
+description: Allows you to generate in vhost locally, on a VPS or multi-hosting (Limit to OVH for the moment)
 package: Custom
-core: 8.x
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^9 || ^10
 dependencies:
   - ovh_api_rest:ovh_api_rest
