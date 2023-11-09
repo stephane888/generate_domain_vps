@@ -28,6 +28,24 @@ class GenerateDomainVhost extends ControllerBase {
    */
   protected $logger;
   protected $hasError = false;
+  /**
+   *
+   * @var array
+   */
+  protected $config = NULL;
+  /**
+   * Contient les chemins vers les ertificats (publi et privés).
+   *
+   * @var string
+   */
+  protected $sslFile = null;
+  /**
+   * Permet d'empecher de generer la partie SSL, cela peut etre necessaire si la
+   * generation du SSL a echoue.
+   *
+   * @var boolean
+   */
+  protected $forceDisableVhsotSSL = false;
   
   /**
    * --
@@ -36,6 +54,14 @@ class GenerateDomainVhost extends ControllerBase {
     $this->logger = \Drupal::logger('generate_domain_vps');
   }
   
+  /**
+   * Permet de creer les enregistrement necessaire pour un vhost.
+   * Adapter pour les sous domaine, pour les nouveaux domains il faut generer le
+   * ssl, en amont et le passet dans le processus.
+   *
+   * @param string $domain
+   * @param string $subDomain
+   */
   function createDomainOnVPS(string $domain, string $subDomain = null) {
     $this->init($domain, $subDomain);
     $this->createVHost();
@@ -44,24 +70,89 @@ class GenerateDomainVhost extends ControllerBase {
     $this->addDomainToHosts();
   }
   
-  function removeDomainOnVps($domain, $subDomain) {
-    $this->init($domain, $subDomain);
-    $this->deleteFileVhost();
+  /**
+   * Le certifical peut etre definie dans la configuration (pour les sous
+   * domaine), mais il peut aussi etre definie à l'exterieur pour les nouveaux
+   * domains.
+   *
+   * @return string
+   */
+  public function getSSLfiles() {
+    $conf = $this->defaultConfig();
+    if (!empty($conf['active_ssl_redirection']) && !$this->forceDisableVhsotSSL) {
+      if ($this->sslFile)
+        return $this->sslFile;
+      else {
+        return $conf['ssl_certificate_file'];
+      }
+    }
+    return false;
+  }
+  
+  /**
+   * Le ssl peut etre fournir de l'exterieur.
+   *
+   * @param string $value
+   */
+  public function setSSLfiles($value) {
+    $this->sslFile = $value;
   }
   
   /**
    *
    * @param string $domain
+   */
+  public function generateSSLForDomain($domain) {
+    $domain = str_replace("www.", "", $domain);
+    $cmd = " sudo certbot certonly --apache -d $domain -d www.$domain --dry-run";
+    $exc = $this->excuteCmd($cmd);
+    if ($exc['return_var']) {
+      $this->messenger()->addWarning(" Le certificat SSL n'a pas pu etre generer ");
+      $this->forceDisableVhsotSSL = true;
+      return null;
+    }
+    
+    $cmd = " sudo certbot certonly --apache -d $domain -d www.$domain ";
+    $exc = $this->excuteCmd($cmd);
+    if ($exc['return_var']) {
+      $this->messenger()->addWarning(" Le certificat SSL n'a pas pu etre generer ");
+      $this->forceDisableVhsotSSL = true;
+      return null;
+    }
+    $this->sslFile = "
+SSLCertificateFile /etc/letsencrypt/live/$domain/fullchain.pem
+SSLCertificateKeyFile /etc/letsencrypt/live/$domain/privkey.pem
+Include /etc/letsencrypt/options-ssl-apache.conf
+";
+    return $this->sslFile;
+  }
+  
+  /**
+   * Permet de supprimer les fichiers de configuration du vhost.
+   *
+   * @param string $domain
+   * @param string $subDomain
+   */
+  public function removeDomainOnVps($domain, $subDomain) {
+    $this->init($domain, $subDomain);
+    $this->deleteFileVhost();
+  }
+  
+  /**
+   * Create file vhost
+   *
+   * @param string $domain
    * @param string $subDomain
    */
   protected function createVHost() {
-    $conf = ConfigDrupal::config('generate_domain_vps.settings');
+    $conf = $this->defaultConfig();
     if (!empty($conf['document_root'])) {
       $documentRoot = $conf['document_root'];
       $serverAdmin = $conf['server_admin'];
       $logs = $conf['logs'];
       $ssl_redirection = '';
-      if (!empty($conf['active_ssl_redirection'])) {
+      $ssl_certificate_file = $this->getSSLfiles();
+      if ($ssl_certificate_file) {
         $ssl_redirection = '
       #redirect to https
       RewriteEngine On
@@ -93,8 +184,8 @@ class GenerateDomainVhost extends ControllerBase {
 '; // cette ligne est necessaire car cela peut causser une erreur
       // d'eexecution au niveau de apache.( si </VirtualHost> et <VirtualHost
       // *:443> sont sur la meme ligne erreur d'execution ).
-      if (!empty($conf['active_ssl_redirection'])) {
-        $ssl_certificate_file = $conf['ssl_certificate_file'];
+      
+      if ($ssl_certificate_file) {
         $string .= '
 <VirtualHost *:443>
         ServerAdmin ' . $serverAdmin . '
@@ -286,6 +377,17 @@ class GenerateDomainVhost extends ControllerBase {
         }
       }
     }
+  }
+  
+  /**
+   * Permet de recuperer la configuration.
+   *
+   * @return array|NULL|number|mixed|\Drupal\Component\Render\MarkupInterface|string
+   */
+  private function defaultConfig() {
+    if (!$this->config)
+      $this->config = ConfigDrupal::config('generate_domain_vps.settings');
+    return $this->config;
   }
   
   /**
