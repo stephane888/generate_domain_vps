@@ -29,11 +29,14 @@ class GenerateDomainVhost extends ControllerBase {
   protected $logger;
   protected $hasError = false;
   
+  /**
+   * --
+   */
   function __construct() {
     $this->logger = \Drupal::logger('generate_domain_vps');
   }
   
-  function createDomainOnVPS(string $domain, string $subDomain) {
+  function createDomainOnVPS(string $domain, string $subDomain = null) {
     $this->init($domain, $subDomain);
     $this->createVHost();
     $this->linkToVhostApache2();
