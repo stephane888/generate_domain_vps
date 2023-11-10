@@ -107,7 +107,7 @@ class GenerateDomainVhost extends ControllerBase {
   public function generateSSLForDomainAndCreatedomainOnVps($domain) {
     $domain = str_replace("www.", "", $domain);
     $this->init($domain);
-    $this->addDomainToHosts();
+    $this->addDomainToHosts(true);
     if (!$this->hasError) {
       $cmd = "sudo acmetool want $domain www.$domain ";
       $exc = $this->excuteCmd($cmd);
@@ -124,7 +124,7 @@ Include /etc/letsencrypt/options-ssl-apache.conf
 ";
       }
       //
-      $this->createVHost();
+      $this->createVHost(TRUE);
       $this->linkToVhostApache2();
       $this->activeNewHost();
       return true;
@@ -156,7 +156,7 @@ Include /etc/letsencrypt/options-ssl-apache.conf
    * @param string $domain
    * @param string $subDomain
    */
-  protected function createVHost() {
+  protected function createVHost($add_WWW = false) {
     $conf = $this->defaultConfig();
     if (!empty($conf['document_root'])) {
       $documentRoot = $conf['document_root'];
@@ -178,9 +178,13 @@ Include /etc/letsencrypt/options-ssl-apache.conf
         ' . $conf['php_version'] . '
         </FilesMatch>';
       }
+      $alias = '';
+      if ($add_WWW)
+        $alias = "ServerAlias www." . self::$currentDomain;
       $string = '<VirtualHost *:80>
       	ServerAdmin ' . $serverAdmin . '
       	ServerName ' . self::$currentDomain . '
+        ' . $alias . '
       	DocumentRoot ' . $documentRoot . '
       	<Directory ' . $documentRoot . '>
       		Options Indexes FollowSymLinks
@@ -202,6 +206,7 @@ Include /etc/letsencrypt/options-ssl-apache.conf
 <VirtualHost *:443>
         ServerAdmin ' . $serverAdmin . '
         ServerName ' . self::$currentDomain . '
+        ' . $alias . '
         DocumentRoot ' . $documentRoot . '
         <Directory ' . $documentRoot . '>
                 Options Indexes FollowSymLinks
@@ -356,7 +361,7 @@ Include /etc/letsencrypt/options-ssl-apache.conf
    * Ajouter un nouveau domain dans le fichier /etc/hosts tout en evitant les
    * doublons.
    */
-  protected function addDomainToHosts() {
+  protected function addDomainToHosts($add_WWW = false) {
     if (self::$currentDomain && !$this->hasError) {
       $conf = ConfigDrupal::config('ovh_api_rest.settings');
       $ip = $conf['target'];
@@ -366,7 +371,14 @@ Include /etc/letsencrypt/options-ssl-apache.conf
           unset($hosts[$k]);
         }
       }
-      $hosts[] = $ip . "\t" . self::$currentDomain;
+      
+      if ($add_WWW) {
+        $hosts[] = $ip . "\t" . self::$currentDomain . "\n";
+        $hosts[] = $ip . "\t" . 'www.' . self::$currentDomain;
+      }
+      else
+        $hosts[] = $ip . "\t" . self::$currentDomain;
+      
       $hosts_file = implode("", $hosts);
       $cmd = " echo '$hosts_file' | sudo tee  /etc/hosts ";
       $exc = $this->excuteCmd($cmd);
