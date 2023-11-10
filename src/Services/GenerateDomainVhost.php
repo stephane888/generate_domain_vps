@@ -99,32 +99,42 @@ class GenerateDomainVhost extends ControllerBase {
   }
   
   /**
+   * Permet de generer le domaine et ensuite generer le ne cessaire pour la
+   * configuration du host.
    *
    * @param string $domain
    */
-  public function generateSSLForDomain($domain) {
+  public function generateSSLForDomainAndCreatedomainOnVps($domain) {
     $domain = str_replace("www.", "", $domain);
-    $cmd = " sudo certbot certonly --apache -d $domain -d www.$domain --dry-run";
-    $exc = $this->excuteCmd($cmd);
-    if ($exc['return_var']) {
-      $this->messenger()->addWarning(" Le certificat SSL n'a pas pu etre generer ");
-      $this->forceDisableVhsotSSL = true;
-      return null;
-    }
-    
-    $cmd = " sudo certbot certonly --apache -d $domain -d www.$domain ";
-    $exc = $this->excuteCmd($cmd);
-    if ($exc['return_var']) {
-      $this->messenger()->addWarning(" Le certificat SSL n'a pas pu etre generer ");
-      $this->forceDisableVhsotSSL = true;
-      return null;
-    }
-    $this->sslFile = "
+    $this->init($domain);
+    $this->addDomainToHosts();
+    if (!$this->hasError) {
+      $cmd = " sudo certbot certonly --apache -d $domain -d www.$domain --dry-run";
+      $exc = $this->excuteCmd($cmd);
+      if ($exc['return_var']) {
+        $this->messenger()->addWarning(" Le certificat SSL n'a pas pu etre generer ");
+        $this->forceDisableVhsotSSL = true;
+        return null;
+      }
+      
+      $cmd = " sudo certbot certonly --apache -d $domain -d www.$domain ";
+      $exc = $this->excuteCmd($cmd);
+      if ($exc['return_var']) {
+        $this->messenger()->addWarning(" Le certificat SSL n'a pas pu etre generer ");
+        $this->forceDisableVhsotSSL = true;
+      }
+      $this->sslFile = "
 SSLCertificateFile /etc/letsencrypt/live/$domain/fullchain.pem
 SSLCertificateKeyFile /etc/letsencrypt/live/$domain/privkey.pem
 Include /etc/letsencrypt/options-ssl-apache.conf
 ";
-    return $this->sslFile;
+      //
+      $this->createVHost();
+      $this->linkToVhostApache2();
+      $this->activeNewHost();
+      return true;
+    }
+    return null;
   }
   
   /**
@@ -136,6 +146,13 @@ Include /etc/letsencrypt/options-ssl-apache.conf
   public function removeDomainOnVps($domain, $subDomain) {
     $this->init($domain, $subDomain);
     $this->deleteFileVhost();
+  }
+  
+  /**
+   * Permet de derterminer si une erreur s'est produite.
+   */
+  public function hasError() {
+    return $this->hasError;
   }
   
   /**
@@ -340,14 +357,44 @@ Include /etc/letsencrypt/options-ssl-apache.conf
     }
   }
   
+  /**
+   * Ajouter un nouveau domain dans le fichier /etc/hosts tout en evitant les
+   * doublons.
+   */
   protected function addDomainToHosts() {
+    if (self::$currentDomain && !$this->hasError) {
+      $conf = ConfigDrupal::config('ovh_api_rest.settings');
+      $ip = $conf['target'];
+      $hosts = file('/etc/hosts', FILE_SKIP_EMPTY_LINES);
+      foreach ($hosts as $k => $line_host) {
+        if (str_contains($line_host, self::$currentDomain)) {
+          unset($hosts[$k]);
+        }
+      }
+      $hosts[] = $ip . "\t" . self::$currentDomain;
+      $hosts_file = implode("", $hosts);
+      $cmd = " echo '$hosts_file' | sudo tee  /etc/hosts ";
+      $exc = $this->excuteCmd($cmd);
+      if ($exc['return_var']) {
+        $this->logger->critical(' Error add domain to /etc/hosts <br> ' . implode("<br>", $exc['output']));
+        $this->hasError = true;
+      }
+    }
+  }
+  
+  /**
+   *
+   * @deprecated deprecier, car elle ne permet pas de verifier si une valeur
+   *             existe deja.
+   */
+  protected function addDomainToHostsOLd() {
     if (self::$currentDomain && !$this->hasError) {
       $conf = ConfigDrupal::config('ovh_api_rest.settings');
       $ip = $conf['target'];
       $cmd = " sudo echo '" . $ip . "  " . self::$currentDomain . "' | sudo tee -a /etc/hosts ";
       $exc = $this->excuteCmd($cmd);
       if ($exc['return_var']) {
-        $this->logger->critical(' Error to reload apache2 <br> ' . implode("<br>", $exc['output']));
+        $this->logger->critical(' Error add domain to /etc/hosts <br> ' . implode("<br>", $exc['output']));
         $this->hasError = true;
       }
     }
