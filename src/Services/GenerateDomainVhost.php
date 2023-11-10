@@ -109,25 +109,20 @@ class GenerateDomainVhost extends ControllerBase {
     $this->init($domain);
     $this->addDomainToHosts();
     if (!$this->hasError) {
-      $cmd = " sudo certbot certonly --apache -d $domain -d www.$domain --dry-run";
+      $cmd = "sudo acmetool want $domain www.$domain ";
       $exc = $this->excuteCmd($cmd);
-      if ($exc['return_var']) {
-        $this->messenger()->addWarning(" Le certificat SSL n'a pas pu etre generer ");
-        $this->forceDisableVhsotSSL = true;
-        return null;
-      }
-      
-      $cmd = " sudo certbot certonly --apache -d $domain -d www.$domain ";
-      $exc = $this->excuteCmd($cmd);
+      \Stephane888\Debug\debugLog::kintDebugDrupal($exc, 'generateSSLForDomainAndCreatedomainOnVps', true);
       if ($exc['return_var']) {
         $this->messenger()->addWarning(" Le certificat SSL n'a pas pu etre generer ");
         $this->forceDisableVhsotSSL = true;
       }
-      $this->sslFile = "
+      else {
+        $this->sslFile = "
 SSLCertificateFile /etc/letsencrypt/live/$domain/fullchain.pem
 SSLCertificateKeyFile /etc/letsencrypt/live/$domain/privkey.pem
 Include /etc/letsencrypt/options-ssl-apache.conf
 ";
+      }
       //
       $this->createVHost();
       $this->linkToVhostApache2();
