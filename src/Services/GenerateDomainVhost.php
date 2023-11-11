@@ -109,7 +109,8 @@ class GenerateDomainVhost extends ControllerBase {
     $this->init($domain);
     $this->addDomainToHosts(true);
     if (!$this->hasError) {
-      $cmd = "sudo acmetool want $domain www.$domain ";
+      // $cmd = "sudo acmetool want $domain www.$domain ";
+      $cmd = "sudo certbot certonly --dns-ovh --dns-ovh-credentials /root/.ovhapi -d $domain -d www.$domain";
       $exc = $this->excuteCmd($cmd);
       \Stephane888\Debug\debugLog::kintDebugDrupal($exc, 'generateSSLForDomainAndCreatedomainOnVps', true);
       if ($exc['return_var']) {
