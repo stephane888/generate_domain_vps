@@ -58,11 +58,28 @@ class GenerateDomainVhost extends ControllerBase {
    * Permet de creer les enregistrement necessaire pour un vhost.
    * Adapter pour les sous domaine, pour les nouveaux domains il faut generer le
    * ssl, en amont et le passet dans le processus.
+   * NB: Dans cette logique, tous les sous domaine utilise le domaine parent
+   * mais necessite un ServerAlias avec wilcatd.
+   * Example : ServerAlias *.example.com
    *
    * @param string $domain
    * @param string $subDomain
    */
   function createDomainOnVPS(string $domain, string $subDomain = null) {
+    $this->init($domain, $subDomain);
+    $this->addDomainToHosts();
+  }
+  
+  /**
+   * Permet de creer les enregistrement necessaire pour un vhost.
+   * Adapter pour les sous domaine, pour les nouveaux domains il faut generer le
+   * ssl, en amont et le passet dans le processus.
+   * NB: dans cette logique un fichier par sous domaine.
+   *
+   * @param string $domain
+   * @param string $subDomain
+   */
+  function createSubDomainOnVPS(string $domain, string $subDomain = null) {
     $this->init($domain, $subDomain);
     $this->createVHost();
     $this->linkToVhostApache2();
