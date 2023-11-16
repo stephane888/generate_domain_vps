@@ -134,7 +134,7 @@ class GenerateDomainVhost extends ControllerBase {
       $dd .= " -d www.$domain ";
       $with_www = true;
     }
-    $webroot = "/var/www/wb_horison_com/public/web";
+    $webroot = "/var/www/wb_horison_com_v2/public/web";
     $email = " --email kksasteph888@gmail.com ";
     $test_servser = " --server=https://acme-staging-v02.api.letsencrypt.org/directory ";
     $test_servser = "";
@@ -151,7 +151,7 @@ class GenerateDomainVhost extends ControllerBase {
       // $cmd = "sudo certbot certonly --dns-ovh --dns-ovh-credentials
       // /root/.ovhapi -d $domain -d www.$domain";
       $cmd = "cd /home/wb-horizon && sudo lego --accept-tos  $test_servser  $email  --http --http.webroot $webroot  --http.port 80 $dd run";
-      $cmd = "mkdir /var/www/wb_horison_com/public/web/.well-known-test";
+      // $cmd = "mkdir /var/www/wb_horison_com/public/web/.well-known-test";
       $exc = $this->excuteCmd($cmd);
       \Stephane888\Debug\debugLog::kintDebugDrupal($exc, 'generateSSLForDomainAndCreatedomainOnVps', true);
       if ($exc['return_var']) {
