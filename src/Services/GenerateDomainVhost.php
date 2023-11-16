@@ -124,10 +124,22 @@ class GenerateDomainVhost extends ControllerBase {
   public function generateSSLForDomainAndCreatedomainOnVps($domain) {
     $domain = str_replace("www.", "", $domain);
     $this->init($domain);
-    $this->addDomainToHosts(true);
+    $dd = " -d $domain ";
+    // on verifie s'il s'agit d'un sous domain.
+    if (substr_count($domain, '.') >= 2)
+      $this->addDomainToHosts();
+    else {
+      $this->addDomainToHosts(true);
+      $dd .= " -d www.$domain ";
+    }
+    $webroot = "/var/www/wb_horison_com/public/web";
+    $email = " --email kksasteph888@gmail.com ";
+    $test_servser = " --server=https://acme-staging-v02.api.letsencrypt.org/directory ";
     if (!$this->hasError) {
       // $cmd = "sudo acmetool want $domain www.$domain ";
-      $cmd = "sudo certbot certonly --dns-ovh --dns-ovh-credentials /root/.ovhapi -d $domain -d www.$domain";
+      // $cmd = "sudo certbot certonly --dns-ovh --dns-ovh-credentials
+      // /root/.ovhapi -d $domain -d www.$domain";
+      $cmd = "lego --accept-tos  $test_servser  $email  --http --http.webroot $webroot  --http.port 80 $dd run";
       $exc = $this->excuteCmd($cmd);
       \Stephane888\Debug\debugLog::kintDebugDrupal($exc, 'generateSSLForDomainAndCreatedomainOnVps', true);
       if ($exc['return_var']) {
