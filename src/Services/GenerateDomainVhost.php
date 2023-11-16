@@ -159,6 +159,7 @@ class GenerateDomainVhost extends ControllerBase {
         $this->forceDisableVhsotSSL = true;
       }
       else {
+        $this->forceDisableVhsotSSL = true;
         // On identifie le domaine qui vient d'etre creer, car on a doit le
         // renouveller manuellement.
         $values = [
