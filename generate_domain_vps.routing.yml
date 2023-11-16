@@ -21,3 +21,11 @@ generate_domain_vps.settings_form:
     _form: 'Drupal\generate_domain_vps\Form\SettingsForm'
   requirements:
     _permission: 'administer generate_domain_vps configuration'
+
+entity.domain_ssl.settings:
+  path: 'admin/structure/domain-ssl'
+  defaults:
+    _form: '\Drupal\generate_domain_vps\Form\DomainSslSettingsForm'
+    _title: 'Domain SSL'
+  requirements:
+    _permission: 'administer domain ssl'

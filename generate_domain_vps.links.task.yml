@@ -1,0 +1,22 @@
+entity.domain_ssl.settings:
+  title: 'Settings'
+  route_name: entity.domain_ssl.settings
+  base_route: entity.domain_ssl.settings
+entity.domain_ssl.view:
+  title: 'View'
+  route_name: entity.domain_ssl.canonical
+  base_route: entity.domain_ssl.canonical
+entity.domain_ssl.edit_form:
+  title: 'Edit'
+  route_name: entity.domain_ssl.edit_form
+  base_route: entity.domain_ssl.canonical
+entity.domain_ssl.delete_form:
+  title: 'Delete'
+  route_name: entity.domain_ssl.delete_form
+  base_route: entity.domain_ssl.canonical
+  weight: 10
+entity.domain_ssl.collection:
+  title: 'Domain SSLs'
+  route_name: entity.domain_ssl.collection
+  base_route: system.admin_content
+  weight: 10

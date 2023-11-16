@@ -4,3 +4,14 @@ generate_domain_vps.settings_form:
   parent: system.admin_config_ui
   route_name: generate_domain_vps.settings_form
   weight: 10
+
+entity.domain_ssl.settings:
+  title: 'Domain SSL'
+  description: 'Configure a Domain SSL entity type.'
+  route_name:  entity.domain_ssl.settings
+  parent: system.admin_structure
+entity.domain_ssl.collection:
+  title: 'Domain SSLs'
+  description: 'List of domain ssls.'
+  route_name: entity.domain_ssl.collection
+  parent: system.admin_content

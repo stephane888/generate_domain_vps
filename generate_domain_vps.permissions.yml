@@ -1,0 +1,3 @@
+administer domain ssl:
+  title: 'Administer domain ssl settings'
+  restrict access: true

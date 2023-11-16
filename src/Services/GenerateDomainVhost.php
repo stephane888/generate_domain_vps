@@ -134,12 +134,14 @@ class GenerateDomainVhost extends ControllerBase {
     }
     $webroot = "/var/www/wb_horison_com/public/web";
     $email = " --email kksasteph888@gmail.com ";
-    $test_servser = " --server=https://acme-staging-v02.api.letsencrypt.org/directory ";
+    // $test_servser = "
+    // --server=https://acme-staging-v02.api.letsencrypt.org/directory ";
+    $test_servser = "";
     if (!$this->hasError) {
       // $cmd = "sudo acmetool want $domain www.$domain ";
       // $cmd = "sudo certbot certonly --dns-ovh --dns-ovh-credentials
       // /root/.ovhapi -d $domain -d www.$domain";
-      $cmd = "lego --accept-tos  $test_servser  $email  --http --http.webroot $webroot  --http.port 80 $dd run";
+      $cmd = "cd /home/wb-horizon && lego --accept-tos  $test_servser  $email  --http --http.webroot $webroot  --http.port 80 $dd run";
       $exc = $this->excuteCmd($cmd);
       \Stephane888\Debug\debugLog::kintDebugDrupal($exc, 'generateSSLForDomainAndCreatedomainOnVps', true);
       if ($exc['return_var']) {
@@ -147,10 +149,16 @@ class GenerateDomainVhost extends ControllerBase {
         $this->forceDisableVhsotSSL = true;
       }
       else {
+        // On identifie le domaine qui vient d'etre creer, car on a doit le
+        // renouveller manuellement.
+        $values = [
+          'label' => $domain
+        ];
+        $DomainSsl = \Drupal\generate_domain_vps\Entity\DomainSsl::create($values);
+        $DomainSsl->save();
         $this->sslFile = "
-SSLCertificateFile /etc/letsencrypt/live/$domain/fullchain.pem
-SSLCertificateKeyFile /etc/letsencrypt/live/$domain/privkey.pem
-Include /etc/letsencrypt/options-ssl-apache.conf
+SSLCertificateFile /home/wb-horizon/.lego/certificates/$domain.crt
+SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
 ";
       }
       //

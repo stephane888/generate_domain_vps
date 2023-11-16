@@ -1,0 +1,5 @@
+domain_ssl.add_form:
+  title: 'Add domain ssl'
+  route_name: entity.domain_ssl.add_form
+  appears_on:
+    - entity.domain_ssl.collection
