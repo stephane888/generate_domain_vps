@@ -137,7 +137,7 @@ class GenerateDomainVhost extends ControllerBase {
     $webroot = "/var/www/wb_horison_com_v2/public/web";
     $email = " --email kksasteph888@gmail.com ";
     $test_servser = " --server=https://acme-staging-v02.api.letsencrypt.org/directory ";
-    $test_servser = "";
+    // $test_servser = "";
     // $test_servser = "";
     if (!$this->hasError) {
       // On commence par cree le vhost afin de pouvoir effectuer le chalenge via
