@@ -171,8 +171,16 @@ class GenerateDomainVhost extends ControllerBase {
     if (!empty($ids)) {
       $id = reset($ids);
       $DomainSsl = \Drupal\generate_domain_vps\Entity\DomainSsl::load($id);
-      if ($DomainSsl->getStatusSsl())
+      if ($DomainSsl->getStatusSsl()) {
+        $this->forceDisableVhsotSSL = false;
+        $this->sslFile = "
+SSLCertificateFile /home/wb-horizon/.lego/certificates/$domain.crt
+SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
+";
+        $this->messenger()->addStatus('Le certificat existe deja');
         return TRUE;
+      }
+      
       if (!$DomainSsl->getStatusSsl() && $DomainSsl->checkRateLimit()) {
         $status_generate_SSL = $this->GenerateSSL($domain, $dd);
         if ($status_generate_SSL) {
