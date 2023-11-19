@@ -85,7 +85,7 @@ class DomainSsl extends ContentEntityBase implements DomainSslInterface {
   }
   
   /**
-   * Retourne le status tu SSL.
+   * Retourne le status du SSL.
    *
    * @return boolean
    */

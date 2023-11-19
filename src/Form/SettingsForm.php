@@ -91,7 +91,7 @@ Include /etc/letsencrypt/options-ssl-apache.conf
     ];
     
     $form['certicate_lego']['mode'] = [
-      '#type' => 'checkbox',
+      '#type' => 'radios',
       '#title' => t('Mode de generation'),
       '#options' => [
         'test' => 'Sandbox',
