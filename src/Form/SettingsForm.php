@@ -87,7 +87,8 @@ Include /etc/letsencrypt/options-ssl-apache.conf
     $form['certicate_lego'] = [
       '#type' => 'details',
       '#title' => t('Generation automatique du certificat avec LEGO'),
-      '#open' => false
+      '#open' => false,
+      '#tree' => true
     ];
     
     $form['certicate_lego']['mode'] = [
@@ -96,7 +97,8 @@ Include /etc/letsencrypt/options-ssl-apache.conf
       '#options' => [
         'test' => 'Sandbox',
         'prod' => 'Production'
-      ]
+      ],
+      '#default_value' => $config->get('certicate_lego.mode')
     ];
     
     return parent::buildForm($form, $form_state);
@@ -126,6 +128,7 @@ Include /etc/letsencrypt/options-ssl-apache.conf
     $config->set('active_ssl_redirection', $form_state->getValue('active_ssl_redirection'));
     $config->set('php_version', $form_state->getValue('php_version'));
     $config->set('ssl_certificate_file', $form_state->getValue('ssl_certificate_file'));
+    $config->set('certicate_lego', $form_state->getValue('certicate_lego'));
     $config->save();
     parent::submitForm($form, $form_state);
   }
