@@ -59,6 +59,13 @@ class DomainSsl extends ContentEntityBase implements DomainSslInterface {
   use EntityOwnerTrait;
   
   /**
+   * Le nombre d'essaie max en 1 semaine.
+   *
+   * @var integer
+   */
+  protected const NombreEssaieMax = 3;
+  
+  /**
    *
    * {@inheritdoc}
    */
@@ -68,6 +75,56 @@ class DomainSsl extends ContentEntityBase implements DomainSslInterface {
       // If no owner has been set explicitly, make the anonymous user the owner.
       $this->setOwnerId(0);
     }
+    // On verifie le nombre d'essaie.
+    $nbr = $this->getNombreEssaie();
+    if ($nbr < self::NombreEssaieMax) {
+      $this->set('nombre_essaie', $nbr + 1);
+    }
+    else
+      throw new \Exception("Vous avez atteint la limite de generation de domaine, veiller essayer dans une semaine ");
+  }
+  
+  /**
+   * Retourne le status tu SSL.
+   *
+   * @return boolean
+   */
+  public function getStatusSsl() {
+    return $this->get('status_ssl')->value;
+  }
+  
+  /**
+   * Active le status su SSL.
+   */
+  public function setStatusSSL($status = true) {
+    $this->set('status_ssl', $status);
+  }
+  
+  /**
+   * --
+   */
+  public function resetRateLimit() {
+    $this->set('nombre_essaie', 1);
+  }
+  
+  /**
+   * Determine si l'on peut encore essayé de generer le domaine, ( On doit
+   * completé cette fonctionne pour quelle tienne en compte le nombre de semaine
+   * ).
+   */
+  public function checkRateLimit() {
+    $nombre_essaie = (int) $this->get('nombre_essaie')->value;
+    if ($nombre_essaie <= self::NombreEssaieMax)
+      return true;
+    else
+      return false;
+  }
+  
+  /**
+   * --
+   */
+  public function getNombreEssaie() {
+    return (int) $this->get('nombre_essaie')->value;
   }
   
   /**
@@ -124,6 +181,32 @@ class DomainSsl extends ContentEntityBase implements DomainSslInterface {
     // 'type' => 'datetime_default',
     // 'weight' => 0
     // ]);
+    
+    $fields['status_ssl'] = BaseFieldDefinition::create('boolean')->setLabel(t('Status SSL'))->setDefaultValue(TRUE)->setSetting('on_label', 'Actif')->setDisplayOptions('form', [
+      'type' => 'boolean_checkbox',
+      'settings' => [
+        'display_label' => FALSE
+      ],
+      'weight' => 0
+    ])->setDisplayConfigurable('form', TRUE)->setDisplayOptions('view', [
+      'type' => 'boolean',
+      'label' => 'above',
+      'weight' => 0,
+      'settings' => [
+        'format' => 'enabled-disabled'
+      ]
+    ])->setDisplayConfigurable('view', TRUE);
+    
+    $fields['nombre_essaie'] = BaseFieldDefinition::create('integer')->setLabel(" Nomnbre d'essaie ")->setRevisionable(TRUE)->setSettings([
+      'min' => 1,
+      'max' => 3
+    ])->setDisplayOptions('view', [
+      'label' => 'above',
+      'type' => 'string',
+      'weight' => -4
+    ])->setDisplayOptions('form', [
+      'type' => 'number'
+    ])->setDisplayConfigurable('form', TRUE)->setDisplayConfigurable('view', TRUE)->setRequired(TRUE);
     
     $fields['uid'] = BaseFieldDefinition::create('entity_reference')->setLabel(t('Author'))->setSetting('target_type', 'user')->setDefaultValueCallback(static::class . '::getDefaultEntityOwner')->setDisplayOptions('form', [
       'type' => 'entity_reference_autocomplete',

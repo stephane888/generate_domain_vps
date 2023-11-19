@@ -84,6 +84,21 @@ Include /etc/letsencrypt/options-ssl-apache.conf
 '
     ];
     
+    $form['certicate_lego'] = [
+      '#type' => 'details',
+      '#title' => t('Generation automatique du certificat avec LEGO'),
+      '#open' => false
+    ];
+    
+    $form['certicate_lego']['mode'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Mode de generation'),
+      '#options' => [
+        'test' => 'Sandbox',
+        'prod' => 'Production'
+      ]
+    ];
+    
     return parent::buildForm($form, $form_state);
   }
   

@@ -134,52 +134,116 @@ class GenerateDomainVhost extends ControllerBase {
       $dd .= " -d www.$domain ";
       $with_www = true;
     }
-    $webroot = "/var/www/wb_horison_com_v2/public/web";
-    $email = " --email kksasteph888@gmail.com ";
-    $test_servser = " --server=https://acme-staging-v02.api.letsencrypt.org/directory ";
-    // $test_servser = "";
-    // $test_servser = "";
+    
     if (!$this->hasError) {
       // On commence par cree le vhost afin de pouvoir effectuer le chalenge via
-      // la methode HTTP-01
+      // la methode HTTP-01,
+      // On force la desactivation du SSL.
       $this->forceDisableVhsotSSL = true;
       $this->createVHost();
       $this->linkToVhostApache2();
       $this->activeNewHost();
-      // On essaie de generer le certificat.
-      // $cmd = "sudo acmetool want $domain www.$domain ";
-      // $cmd = "sudo certbot certonly --dns-ovh --dns-ovh-credentials
-      // /root/.ovhapi -d $domain -d www.$domain";
-      $cmd = "cd /home/wb-horizon && sudo lego --accept-tos  $test_servser  $email  --http --http.webroot $webroot  --http.port 80 $dd run";
-      // $cmd = "mkdir /var/www/wb_horison_com/public/web/.well-known-test";
+      
+      if ($this->PrepareGenerateSSL($domain, $dd)) {
+        // On re-cree le vhost en y ajoutant le SSL.
+        $this->createVHost($with_www);
+        $this->linkToVhostApache2();
+        $this->activeNewHost();
+      }
+    }
+    return null;
+  }
+  
+  /**
+   * Elle permet de suivre le nombre de creation afin de ne pas deppaser les
+   * limites.
+   * return true si le SSL c'est generé et a été sauvegardé.
+   *
+   * @param string $domain
+   * @param string $dd
+   *
+   */
+  protected function PrepareGenerateSSL($domain, $dd) {
+    $query = $this->entityTypeManager()->getStorage('domain_ssl')->getQuery();
+    $query->accessCheck(TRUE);
+    $query->condition('label', $domain);
+    $ids = $query->execute();
+    if (!empty($ids)) {
+      $id = reset($ids);
+      $DomainSsl = \Drupal\generate_domain_vps\Entity\DomainSsl::load($id);
+      if ($DomainSsl->getStatusSsl())
+        return TRUE;
+      if (!$DomainSsl->getStatusSsl() && $DomainSsl->checkRateLimit()) {
+        $status_generate_SSL = $this->GenerateSSL($domain, $dd);
+        if ($status_generate_SSL) {
+          $DomainSsl->setStatusSSL(TRUE);
+        }
+        if ($this->runProdSSL())
+          $DomainSsl->save();
+        return $status_generate_SSL;
+      }
+    }
+    else {
+      $status_generate_SSL = $this->GenerateSSL($domain, $dd);
+      if ($this->runProdSSL()) {
+        $values = [
+          'label' => $domain,
+          'status_ssl' => $status_generate_SSL
+        ];
+        $DomainSsl = \Drupal\generate_domain_vps\Entity\DomainSsl::create($values);
+        $DomainSsl->save();
+      }
+      return $status_generate_SSL;
+    }
+    return false;
+  }
+  
+  /**
+   *
+   * @param string $domain
+   * @param string $dd
+   */
+  protected function GenerateSSL($domain, $dd) {
+    $webroot = "/var/www/wb_horison_com_v2/public/web";
+    $email = " --email kksasteph888@gmail.com ";
+    $test_servser = " --server=https://acme-staging-v02.api.letsencrypt.org/directory ";
+    
+    // /////////////////////////////////
+    // Test de generation du certificat.
+    $cmd = "cd /home/wb-horizon && sudo lego --accept-tos  $test_servser  $email  --http --http.webroot $webroot  --http.port 80 $dd run";
+    $exc = $this->excuteCmd($cmd);
+    $this->forceDisableVhsotSSL = true;
+    if ($exc['return_var']) {
+      \Stephane888\Debug\debugLog::kintDebugDrupal($exc, 'error-sandbox-GenerateSSL', true);
+      $this->messenger()->addWarning(" Le certificat SSL n'a pas pu etre generer (Test) ");
+      $this->getLogger('generate_domain_vps')->error(" Le certificat SSL n'a pas pu etre generer (Test) ");
+    }
+    elseif ($this->runProdSSL()) {
+      // /////////////////////////////////
+      // Generation reelle du certificat.
+      $cmd = "cd /home/wb-horizon && sudo lego --accept-tos  $email  --http --http.webroot $webroot  --http.port 80 $dd run";
       $exc = $this->excuteCmd($cmd);
-      \Stephane888\Debug\debugLog::kintDebugDrupal($exc, 'generateSSLForDomainAndCreatedomainOnVps', true);
       if ($exc['return_var']) {
+        \Stephane888\Debug\debugLog::kintDebugDrupal($exc, 'error-prod-GenerateSSL', true);
         $this->messenger()->addWarning(" Le certificat SSL n'a pas pu etre generer ");
+        $this->getLogger('generate_domain_vps')->error(" Le certificat SSL n'a pas pu etre generer");
         $this->forceDisableVhsotSSL = true;
       }
       else {
         $this->forceDisableVhsotSSL = false;
-        // On identifie le domaine qui vient d'etre creer, car on a doit le
-        // renouveller manuellement.
-        $values = [
-          'label' => $domain
-        ];
-        $DomainSsl = \Drupal\generate_domain_vps\Entity\DomainSsl::create($values);
-        $DomainSsl->save();
         $this->sslFile = "
 SSLCertificateFile /home/wb-horizon/.lego/certificates/$domain.crt
 SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
 ";
-        // On desactive le domain, on met à ajour le fichier vhost et on
-        // l'active à nouveau
-        $this->createVHost($with_www);
-        $this->linkToVhostApache2();
-        $this->activeNewHost();
         return true;
       }
     }
-    return null;
+    return false;
+  }
+  
+  private function runProdSSL() {
+    $config = $this->defaultConfig();
+    return isset($config['certicate_lego']['mode']) ? $config['certicate_lego']['mode'] : false;
   }
   
   /**
