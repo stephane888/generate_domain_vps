@@ -182,7 +182,7 @@ class DomainSsl extends ContentEntityBase implements DomainSslInterface {
     // 'weight' => 0
     // ]);
     
-    $fields['status_ssl'] = BaseFieldDefinition::create('boolean')->setLabel(t('Status SSL'))->setDefaultValue(TRUE)->setSetting('on_label', 'Actif')->setDisplayOptions('form', [
+    $fields['status_ssl'] = BaseFieldDefinition::create('boolean')->setLabel(t('Status SSL'))->setSetting('on_label', 'SSL activé')->setDisplayOptions('form', [
       'type' => 'boolean_checkbox',
       'settings' => [
         'display_label' => FALSE
