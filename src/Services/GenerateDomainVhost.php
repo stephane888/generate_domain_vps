@@ -241,9 +241,14 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
     return false;
   }
   
+  /**
+   * --
+   *
+   * @return boolean
+   */
   private function runProdSSL() {
     $config = $this->defaultConfig();
-    return isset($config['certicate_lego']['mode']) ? $config['certicate_lego']['mode'] : false;
+    return isset($config['certicate_lego']['mode']) && $config['certicate_lego']['mode'] == 'prod' ? true : false;
   }
   
   /**
