@@ -21,13 +21,13 @@ class GenerateDomainVpsController extends ControllerBase {
    * @var GenerateDomainVhost
    */
   protected $GenerateDomainVhost;
-  
+
   /**
    *
    * @var PrepareGenerateDomain
    */
   protected $PrepareGenerateDomain;
-  
+
   /**
    *
    * @param GenerateDomainVhost $GenerateDomainVhost
@@ -36,16 +36,19 @@ class GenerateDomainVpsController extends ControllerBase {
     $this->GenerateDomainVhost = $GenerateDomainVhost;
     $this->PrepareGenerateDomain = $PrepareGenerateDomain;
   }
-  
+
   /**
    *
    * @param ContainerInterface $container
    * @return \Drupal\generate_domain_vps\Controller\GenerateDomainVpsController
    */
   public static function create(ContainerInterface $container) {
-    return new static($container->get('generate_domain_vps.vhosts'), $container->get('generate_domain_vps.prepare'));
+    return new static(
+      $container->get('generate_domain_vps.vhosts'),
+      $container->get('generate_domain_vps.prepare')
+    );
   }
-  
+
   /**
    * Pour les tests ou à titre d'example.
    */
@@ -59,7 +62,7 @@ class GenerateDomainVpsController extends ControllerBase {
     ];
     return $build;
   }
-  
+
   /**
    * Permet de crrer les entitées.
    *
@@ -72,13 +75,21 @@ class GenerateDomainVpsController extends ControllerBase {
     try {
       $DomainOvh = $this->PrepareGenerateDomain->CreateEntities($name);
       return HttpResponse::response($DomainOvh->toArray());
-    }
-    catch (\Exception $e) {
+    } catch (\Exception $e) {
       return HttpResponse::response(ExceptionExtractMessage::errorAll($e), 431, $e->getMessage());
-    }
-    catch (\Error $e) {
+    } catch (\Error $e) {
       return HttpResponse::response(ExceptionExtractMessage::errorAll($e), 431, $e->getMessage());
     }
   }
-  
+
+
+  public function checkDomainSsl(Request $request, int $offset_days) {
+    $current_time = \Drupal::time()->getRequestTime();
+    $offset_time = $current_time - ((int)$offset_days) * 3600 * 24;
+    $domain_ssl = $this->GenerateDomainVhost->getGeneratedDomain($offset_time);
+    foreach ($domain_ssl as $domain) {
+      $this->GenerateDomainVhost->generateSSLForDomainAndCreatedomainOnVps($domain->label);
+    }
+    return HttpResponse::response($domain_ssl);
+  }
 }
