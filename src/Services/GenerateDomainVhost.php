@@ -133,30 +133,25 @@ class GenerateDomainVhost extends ControllerBase {
     $domain = str_replace("www.", "", $domain);
     $this->init($domain);
     $dd = " -d $domain ";
-    $with_www = false;
-    // on verifie s'il s'agit d'un sous domain.
-    if (substr_count($domain, '.') >= 2)
-      $this->addDomainToHosts();
-    else {
-      $this->addDomainToHosts(true);
-      $dd .= " -d www.$domain ";
-      $with_www = true;
-    }
+    //
+    $this->addDomainToHosts(true);
+    $dd .= " -d www.$domain ";
 
     if (!$this->hasError) {
       // On commence par cree le vhost afin de pouvoir effectuer le chalenge via
       // la methode HTTP-01,
       // On force la desactivation du SSL.
       $this->forceDisableVhsotSSL = true;
-      $this->createVHost();
+      $this->createVHost(TRUE);
       $this->linkToVhostApache2();
       $this->activeNewHost();
 
       if ($this->PrepareGenerateSSL($domain, $dd)) {
         // On re-cree le vhost en y ajoutant le SSL.
-        $this->createVHost($with_www);
+        $this->createVHost(TRUE);
         $this->linkToVhostApache2();
         $this->activeNewHost();
+        return true;
       }
     }
     return null;
@@ -310,9 +305,9 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
         ' . $conf['php_version'] . '
         </FilesMatch>';
       }
-      $alias = '';
       if ($add_WWW)
         $alias = "ServerAlias www." . self::$currentDomain;
+      $alias = '';
       $string = '<VirtualHost *:80>
       	ServerAdmin ' . $serverAdmin . '
       	ServerName ' . self::$currentDomain . '
