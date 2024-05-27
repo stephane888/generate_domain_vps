@@ -349,7 +349,6 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
 </VirtualHost>';
       }
       //
-      dd($string);
       $f_vhost = self::$homeVps . "/vhosts/" . self::$currentDomain . '.conf';
       if (file_exists($f_vhost)) {
         $this->deleteFileVhost();
