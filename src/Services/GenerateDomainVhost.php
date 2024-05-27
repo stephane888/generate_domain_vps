@@ -305,9 +305,9 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
         ' . $conf['php_version'] . '
         </FilesMatch>';
       }
+      $alias = '';
       if ($add_WWW)
         $alias = "ServerAlias www." . self::$currentDomain;
-      $alias = '';
       $string = '<VirtualHost *:80>
       	ServerAdmin ' . $serverAdmin . '
       	ServerName ' . self::$currentDomain . '
@@ -349,6 +349,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
 </VirtualHost>';
       }
       //
+      dd($string);
       $f_vhost = self::$homeVps . "/vhosts/" . self::$currentDomain . '.conf';
       if (file_exists($f_vhost)) {
         $this->deleteFileVhost();
