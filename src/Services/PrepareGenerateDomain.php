@@ -13,27 +13,27 @@ use Jawira\CaseConverter\Convert;
  *        
  */
 class PrepareGenerateDomain extends ControllerBase {
-  
+
   /**
    *
    * @var \Psr\Log\LoggerInterface
    */
   protected $logger;
-  
+
   /**
    * On fixe la taille max dela partie texte du domaine.
    *
    * @var integer
    */
   protected $domainSize = 20;
-  
+
   /**
    * --
    */
   function __construct() {
     $this->logger = \Drupal::logger('generate_domain_vps');
   }
-  
+
   /**
    * Permet de creer les entités, domain et DomainsOVhEntity, cela permet de
    * preparer le terrain pour l'enregistrement du domaine (vhost).
@@ -48,7 +48,7 @@ class PrepareGenerateDomain extends ControllerBase {
       $this->logger->warning(" Le module ovh n'est pas correctement configurer ");
       throw new \Exception(" Le module ovh n'est pas correctement configurer ");
     }
-    
+
     $DomainOvh = \Drupal\ovh_api_rest\Entity\DomainOvhEntity::create();
     $DomainOvh->set('name', ' Generate domain : ' . $name);
     // $DomainOvh->set('zone_name', $conf['zone_name']);
@@ -57,18 +57,17 @@ class PrepareGenerateDomain extends ControllerBase {
     // $DomainOvh->set('target', $conf['target']);
     // $DomainOvh->set('path', $conf['path']);
     $domaineHost = $DomainOvh->getsubDomain() . '.' . $DomainOvh->getZoneName();
-    
+
     // On cree l'entité domain.
     $domain = \Drupal\vuejs_entity\VuejsEntity::createDomainFromData($domaineHost);
     if ($domain) {
       $DomainOvh->set('domain_id_drupal', $domain->id());
       $DomainOvh->save();
       return $DomainOvh;
-    }
-    else
+    } else
       throw new \Exception(" Impossible de creer ou de recuperer le domain. ");
   }
-  
+
   /**
    *
    * @param string $name
@@ -79,7 +78,7 @@ class PrepareGenerateDomain extends ControllerBase {
     if (strlen($name) < 3)
       throw new \Exception(" La taille doit etre > à 3 ");
   }
-  
+
   /**
    * Permet de generer un nom de sous domaine unique.
    *
@@ -94,17 +93,18 @@ class PrepareGenerateDomain extends ControllerBase {
     // Verifie si le nom de domaine existe deja.
     $query = $this->entityTypeManager()->getStorage('domain_ovh_entity')->getQuery();
     $query->condition('sub_domain', $sub_domain . "%", 'LIKE');
+    $query->accessCheck(FALSE);
     $entities = $query->execute();
     //
     if (!empty($entities)) {
       $query = $this->entityTypeManager()->getStorage('domain_ovh_entity')->getQuery();
       $query->sort('id', 'DESC');
       $query->range(0, 1);
+      $query->accessCheck(FALSE);
       $ids = $query->execute();
       $id = reset($ids) + 1;
       $sub_domain .= $id;
     }
     return $sub_domain;
   }
-  
 }
