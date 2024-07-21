@@ -137,11 +137,6 @@ class GenerateDomainVhost extends ControllerBase {
     //
     $this->addDomainToHosts(true);
     $dd .= " -d www.$domain ";
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> d1ad31481d9020af63ea331587c412044243eb39
     if (!$this->hasError) {
       // On commence par cree le vhost afin de pouvoir effectuer le chalenge via
       // la methode HTTP-01,
