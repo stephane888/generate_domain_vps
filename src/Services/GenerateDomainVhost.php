@@ -3,6 +3,7 @@
 namespace Drupal\generate_domain_vps\Services;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Database\Connection;
 use Stephane888\Debug\Repositories\ConfigDrupal;
 
 /**
@@ -12,7 +13,7 @@ use Stephane888\Debug\Repositories\ConfigDrupal;
  *        
  */
 class GenerateDomainVhost extends ControllerBase {
-  
+
   /**
    *
    * @var string
@@ -21,7 +22,11 @@ class GenerateDomainVhost extends ControllerBase {
   /**
    */
   protected static $currentDomain = null;
-  
+
+  /**
+   * @var  Connection $database
+   */
+  protected $database;
   /**
    *
    * @var \Psr\Log\LoggerInterface
@@ -46,14 +51,17 @@ class GenerateDomainVhost extends ControllerBase {
    * @var boolean
    */
   protected $forceDisableVhsotSSL = false;
-  
+
+
+
   /**
    * --
    */
-  function __construct() {
+  function __construct(Connection  $database) {
     $this->logger = \Drupal::logger('generate_domain_vps');
+    $this->database = $database;
   }
-  
+
   /**
    * Permet de creer les enregistrement necessaire pour un vhost.
    * Adapter pour les sous-domaine, pour les nouveaux domains il faut generer le
@@ -69,7 +77,7 @@ class GenerateDomainVhost extends ControllerBase {
     $this->init($domain, $subDomain);
     $this->addDomainToHosts();
   }
-  
+
   /**
    * Permet de creer les enregistrement necessaire pour un vhost.
    * Adapter pour les sous domaine, pour les nouveaux domains il faut generer le
@@ -86,7 +94,7 @@ class GenerateDomainVhost extends ControllerBase {
     $this->activeNewHost();
     $this->addDomainToHosts();
   }
-  
+
   /**
    * Le certifical peut etre definie dans la configuration (pour les sous
    * domaine), mais il peut aussi etre definie à l'exterieur pour les nouveaux
@@ -105,7 +113,7 @@ class GenerateDomainVhost extends ControllerBase {
     }
     return false;
   }
-  
+
   /**
    * Le ssl peut etre fournir de l'exterieur.
    *
@@ -114,7 +122,7 @@ class GenerateDomainVhost extends ControllerBase {
   public function setSSLfiles($value) {
     $this->sslFile = $value;
   }
-  
+
   /**
    * Permet de generer le domaine et ensuite generer le ne cessaire pour la
    * configuration du host.
@@ -129,7 +137,11 @@ class GenerateDomainVhost extends ControllerBase {
     //
     $this->addDomainToHosts(true);
     $dd .= " -d www.$domain ";
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> d1ad31481d9020af63ea331587c412044243eb39
     if (!$this->hasError) {
       // On commence par cree le vhost afin de pouvoir effectuer le chalenge via
       // la methode HTTP-01,
@@ -138,7 +150,7 @@ class GenerateDomainVhost extends ControllerBase {
       $this->createVHost(TRUE);
       $this->linkToVhostApache2();
       $this->activeNewHost();
-      
+
       if ($this->PrepareGenerateSSL($domain, $dd)) {
         // On re-cree le vhost en y ajoutant le SSL.
         $this->createVHost(TRUE);
@@ -149,7 +161,7 @@ class GenerateDomainVhost extends ControllerBase {
     }
     return null;
   }
-  
+
   /**
    * Elle permet de suivre le nombre de creation afin de ne pas deppaser les
    * limites.
@@ -176,7 +188,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
         $this->messenger()->addStatus('Le certificat existe deja');
         return TRUE;
       }
-      
+
       if (!$DomainSsl->getStatusSsl() && $DomainSsl->checkRateLimit()) {
         $status_generate_SSL = $this->GenerateSSL($domain, $dd);
         if ($status_generate_SSL) {
@@ -186,8 +198,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
           $DomainSsl->save();
         return $status_generate_SSL;
       }
-    }
-    else {
+    } else {
       $status_generate_SSL = $this->GenerateSSL($domain, $dd);
       if ($this->runProdSSL()) {
         $values = [
@@ -201,7 +212,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
     }
     return false;
   }
-  
+
   /**
    *
    * @param string $domain
@@ -211,7 +222,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
     $webroot = "/var/www/wb_horison_com_v2/public/web";
     $email = " --email kksasteph888@gmail.com ";
     $test_servser = " --server=https://acme-staging-v02.api.letsencrypt.org/directory ";
-    
+
     // /////////////////////////////////
     // Test de generation du certificat.
     $cmd = "cd /home/wb-horizon && sudo lego --accept-tos  $test_servser  $email  --http --http.webroot $webroot  --http.port 80 $dd run";
@@ -221,8 +232,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
       \Stephane888\Debug\debugLog::kintDebugDrupal($exc, 'error-sandbox-GenerateSSL', true);
       $this->messenger()->addWarning(" Le certificat SSL n'a pas pu etre generer (Test) ");
       $this->getLogger('generate_domain_vps')->error(" Le certificat SSL n'a pas pu etre generer (Test) ");
-    }
-    elseif ($this->runProdSSL()) {
+    } elseif ($this->runProdSSL()) {
       // /////////////////////////////////
       // Generation reelle du certificat.
       $cmd = "cd /home/wb-horizon && sudo lego --accept-tos  $email  --http --http.webroot $webroot  --http.port 80 $dd run";
@@ -232,8 +242,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
         $this->messenger()->addWarning(" Le certificat SSL n'a pas pu etre generer ");
         $this->getLogger('generate_domain_vps')->error(" Le certificat SSL n'a pas pu etre generer");
         $this->forceDisableVhsotSSL = true;
-      }
-      else {
+      } else {
         $this->forceDisableVhsotSSL = false;
         $this->sslFile = "
 SSLCertificateFile /home/wb-horizon/.lego/certificates/$domain.crt
@@ -244,7 +253,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
     }
     return false;
   }
-  
+
   /**
    * --
    *
@@ -254,7 +263,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
     $config = $this->defaultConfig();
     return isset($config['certicate_lego']['mode']) && $config['certicate_lego']['mode'] == 'prod' ? true : false;
   }
-  
+
   /**
    * Permet de supprimer les fichiers de configuration du vhost.
    *
@@ -265,14 +274,14 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
     $this->init($domain, $subDomain);
     $this->deleteFileVhost();
   }
-  
+
   /**
    * Permet de derterminer si une erreur s'est produite.
    */
   public function hasError() {
     return $this->hasError;
   }
-  
+
   /**
    * Create file vhost
    *
@@ -323,7 +332,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
 '; // cette ligne est necessaire car cela peut causser une erreur
       // d'eexecution au niveau de apache.( si </VirtualHost> et <VirtualHost
       // *:443> sont sur la meme ligne erreur d'execution ).
-      
+
       if ($ssl_certificate_file) {
         $string .= '
 <VirtualHost *:443>
@@ -357,12 +366,11 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
         $this->logger->warning(' Error to generate vhost <br> ' . implode("<br>", $exc['output']));
         $this->hasError = true;
       }
-    }
-    else {
+    } else {
       $this->hasError = true;
     }
   }
-  
+
   /**
    * Permet de supprimer un domaine.
    * 1 - on desactive le domaine
@@ -387,7 +395,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
       $this->removeDomainToHosts();
     }
   }
-  
+
   /**
    * --
    */
@@ -406,7 +414,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
       }
     }
   }
-  
+
   /**
    *
    * @return boolean
@@ -421,8 +429,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
         if ($exc['return_var']) {
           $this->logger->critical(' Error to disable vhost ' . self::$currentDomain . '.conf <br> ' . $cmd . '<br>' . implode("<br>", $exc['output']));
           return false;
-        }
-        else {
+        } else {
           $cmd = " sudo systemctl reload apache2 ";
           $exc = $this->excuteCmd($cmd);
           if ($exc['return_var']) {
@@ -438,7 +445,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
       }
     }
   }
-  
+
   /**
    * --
    */
@@ -456,8 +463,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
           $this->logger->critical(' Error to disable vhost <br> ' . $cmd . '<br>' . implode("<br>", $exc['output']));
         }
         $this->hasError = true;
-      }
-      else {
+      } else {
         $cmd = "sudo systemctl reload apache2";
         $exc = $this->excuteCmd($cmd);
         if ($exc['return_var']) {
@@ -479,7 +485,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
       }
     }
   }
-  
+
   /**
    * Ajouter un nouveau domain dans le fichier /etc/hosts tout en evitant les
    * doublons.
@@ -494,14 +500,13 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
           unset($hosts[$k]);
         }
       }
-      
+
       if ($add_WWW) {
         $hosts[] = $ip . "\t" . self::$currentDomain . "\n";
         $hosts[] = $ip . "\t" . 'www.' . self::$currentDomain;
-      }
-      else
+      } else
         $hosts[] = $ip . "\t" . self::$currentDomain;
-      
+
       $hosts_file = implode("", $hosts);
       $cmd = " echo '$hosts_file' | sudo tee  /etc/hosts ";
       $exc = $this->excuteCmd($cmd);
@@ -511,7 +516,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
       }
     }
   }
-  
+
   /**
    *
    * @deprecated deprecier, car elle ne permet pas de verifier si une valeur
@@ -529,7 +534,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
       }
     }
   }
-  
+
   /**
    * --
    */
@@ -555,7 +560,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
       }
     }
   }
-  
+
   /**
    * Permet de recuperer la configuration.
    *
@@ -566,7 +571,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
       $this->config = ConfigDrupal::config('generate_domain_vps.settings');
     return $this->config;
   }
-  
+
   /**
    *
    * @throws \LogicException
@@ -591,7 +596,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
       array_pop($dir);
       self::$homeVps = implode("/", $dir);
     }
-    
+
     // Create dir 'vhosts' if not exit:
     $cmd = 'mkdir -p ' . self::$homeVps . '/vhosts';
     $exc = $this->excuteCmd($cmd);
@@ -600,7 +605,7 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
       throw new \LogicException(' Impossible de creer le dossier vhosts <br>');
     }
   }
-  
+
   private function excuteCmd($cmd) {
     ob_start();
     $return_var = '';
@@ -616,5 +621,11 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
     ];
     return $debug;
   }
-  
+
+  public function getGeneratedDomain($baseDate) {
+    $query = \Drupal::database()->select("domain_ssl", "domain");
+    $query->fields("domain", ["label"]);
+    $query->condition("changed", $baseDate, "<");
+    return $query->execute()->fetchAll();
+  }
 }

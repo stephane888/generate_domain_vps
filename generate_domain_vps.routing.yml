@@ -1,31 +1,38 @@
 generate_domain_vps.example:
-  path: '/generate-domain-vps/example'
+  path: "/generate-domain-vps/example"
   defaults:
-    _title: 'Example'
+    _title: "Example"
     _controller: '\Drupal\generate_domain_vps\Controller\GenerateDomainVpsController::build'
   requirements:
-    _permission: 'access content'
-    
+    _permission: "access content"
+
 generate_domain_vps.generate:
-  path: '/generate-domain-vps/generate/{name}'
+  path: "/generate-domain-vps/generate/{name}"
   defaults:
-    _title: 'Example'
+    _title: "Example"
     _controller: '\Drupal\generate_domain_vps\Controller\GenerateDomainVpsController::generateDomainVps'
   requirements:
-    _permission: 'access content'
+    _permission: "access content"
 
 generate_domain_vps.settings_form:
-  path: '/admin/config/system/generate-domain-vps'
+  path: "/admin/config/system/generate-domain-vps"
   defaults:
-    _title: 'generate domain vps settings'
+    _title: "generate domain vps settings"
     _form: 'Drupal\generate_domain_vps\Form\SettingsForm'
   requirements:
-    _permission: 'administer generate_domain_vps configuration'
+    _permission: "administer generate_domain_vps configuration"
 
 entity.domain_ssl.settings:
-  path: 'admin/structure/domain-ssl'
+  path: "admin/structure/domain-ssl"
   defaults:
     _form: '\Drupal\generate_domain_vps\Form\DomainSslSettingsForm'
-    _title: 'Domain SSL'
+    _title: "Domain SSL"
   requirements:
-    _permission: 'administer domain ssl'
+    _permission: "administer domain ssl"
+
+generate_domain_vps.check_domain_ssl:
+  path: "/generate_domain_vps/check/{offset_days}"
+  defaults:
+    _controller: '\Drupal\generate_domain_vps\Controller\GenerateDomainVpsController::checkDomainSsl'
+  requirements:
+    _permission: "access content"
