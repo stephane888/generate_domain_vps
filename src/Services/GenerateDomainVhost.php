@@ -500,16 +500,25 @@ SSLCertificateKeyFile /home/wb-horizon/.lego/certificates/$domain.key
           unset($hosts[$k]);
         }
       }
-      
       if ($add_WWW) {
         $hosts[] = $ip . "\t" . self::$currentDomain . "\n";
         $hosts[] = $ip . "\t" . 'www.' . self::$currentDomain;
       }
       else
         $hosts[] = $ip . "\t" . self::$currentDomain;
-      
       $hosts_file = implode("", $hosts);
-      $cmd = " echo '$hosts_file' | sudo tee  /etc/hosts ";
+      /**
+       * La ligne de fin "> /dev/null 2>&1" permet de supprimer ce texte "EOT
+       * 2>&1" qui est automatiquement ajouté en fin de fichier.
+       * On utilise EOF afin d'eviter les erreurs du à des carataires.
+       *
+       * @var string $cmd
+       */
+      $cmd = 'cat << EOF | sudo tee /etc/hosts > /dev/null 2>&1
+' . $hosts_file . '
+EOF
+> /dev/null 2>&1
+';
       $exc = $this->excuteCmd($cmd);
       if ($exc['return_var']) {
         $this->logger->critical(' Error add domain to /etc/hosts <br> ' . implode("<br>", $exc['output']));
