@@ -118,6 +118,7 @@ class GenerateDomainVhost extends ControllerBase {
   /**
    * Permet de generer le domaine et ensuite generer le ne cessaire pour la
    * configuration du host.
+   * exmple : ton-site.fr | chez-yemma.com
    *
    * @param string $domain
    */
@@ -125,30 +126,25 @@ class GenerateDomainVhost extends ControllerBase {
     $domain = str_replace("www.", "", $domain);
     $this->init($domain);
     $dd = " -d $domain ";
-    $with_www = false;
-    // on verifie s'il s'agit d'un sous domain.
-    if (substr_count($domain, '.') >= 2)
-      $this->addDomainToHosts();
-    else {
-      $this->addDomainToHosts(true);
-      $dd .= " -d www.$domain ";
-      $with_www = true;
-    }
+    //
+    $this->addDomainToHosts(true);
+    $dd .= " -d www.$domain ";
     
     if (!$this->hasError) {
       // On commence par cree le vhost afin de pouvoir effectuer le chalenge via
       // la methode HTTP-01,
       // On force la desactivation du SSL.
       $this->forceDisableVhsotSSL = true;
-      $this->createVHost();
+      $this->createVHost(TRUE);
       $this->linkToVhostApache2();
       $this->activeNewHost();
       
       if ($this->PrepareGenerateSSL($domain, $dd)) {
         // On re-cree le vhost en y ajoutant le SSL.
-        $this->createVHost($with_www);
+        $this->createVHost(TRUE);
         $this->linkToVhostApache2();
         $this->activeNewHost();
+        return true;
       }
     }
     return null;
